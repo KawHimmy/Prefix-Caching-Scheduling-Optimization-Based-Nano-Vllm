@@ -12,6 +12,9 @@ class Config:
     gpu_memory_utilization: float = 0.9
     tensor_parallel_size: int = 1
     enforce_eager: bool = False
+    prefill_schedule_policy: str = "fifo"
+    prefill_scan_window: int = 8
+    collect_scheduler_stats: bool = False
     hf_config: AutoConfig | None = None
     eos: int = -1
     kvcache_block_size: int = 256
@@ -21,5 +24,7 @@ class Config:
         assert os.path.isdir(self.model)
         assert self.kvcache_block_size % 256 == 0
         assert 1 <= self.tensor_parallel_size <= 8
+        assert self.prefill_schedule_policy in ("fifo", "cache_aware")
+        assert self.prefill_scan_window >= 1
         self.hf_config = AutoConfig.from_pretrained(self.model)
         self.max_model_len = min(self.max_model_len, self.hf_config.max_position_embeddings)

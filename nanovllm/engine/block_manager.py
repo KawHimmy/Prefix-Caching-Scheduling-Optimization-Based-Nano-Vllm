@@ -1,8 +1,17 @@
 from collections import deque
+from dataclasses import dataclass
 import xxhash
 import numpy as np
 
 from nanovllm.engine.sequence import Sequence
+
+
+@dataclass(slots=True)
+class AllocationEstimate:
+    can_allocate: bool
+    num_cached_blocks: int
+    num_required_blocks: int
+    num_total_blocks: int
 
 
 class Block:
@@ -55,10 +64,10 @@ class BlockManager:
         self.used_block_ids.remove(block_id)
         self.free_block_ids.append(block_id)
 
-    def can_allocate(self, seq: Sequence) -> int:
+    def estimate_allocation(self, seq: Sequence) -> AllocationEstimate:
         h = -1
         num_cached_blocks = 0
-        num_new_blocks = seq.num_blocks
+        num_required_blocks = seq.num_blocks
         for i in range(seq.num_blocks - 1):
             token_ids = seq.block(i)
             h = self.compute_hash(token_ids, h)
@@ -67,10 +76,19 @@ class BlockManager:
                 break
             num_cached_blocks += 1
             if block_id in self.used_block_ids:
-                num_new_blocks -= 1
-        if len(self.free_block_ids) < num_new_blocks:
+                num_required_blocks -= 1
+        return AllocationEstimate(
+            can_allocate=len(self.free_block_ids) >= num_required_blocks,
+            num_cached_blocks=num_cached_blocks,
+            num_required_blocks=num_required_blocks,
+            num_total_blocks=seq.num_blocks,
+        )
+
+    def can_allocate(self, seq: Sequence) -> int:
+        estimate = self.estimate_allocation(seq)
+        if not estimate.can_allocate:
             return -1
-        return num_cached_blocks
+        return estimate.num_cached_blocks
 
     def allocate(self, seq: Sequence, num_cached_blocks: int):
         assert not seq.block_table

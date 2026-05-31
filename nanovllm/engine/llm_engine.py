@@ -57,6 +57,9 @@ class LLMEngine:
     def is_finished(self):
         return self.scheduler.is_finished()
 
+    def get_scheduler_stats(self):
+        return self.scheduler.get_stats()
+
     def generate(
         self,
         prompts: list[str] | list[list[int]],
