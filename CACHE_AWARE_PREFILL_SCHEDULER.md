@@ -196,33 +196,6 @@ print(outputs)
 print(llm.get_scheduler_stats())
 ```
 
-## 简历描述示例
-
-项目名称：
-
-**基于 nano-vLLM 的前缀缓存调度优化**
-
-简短描述：
-
-> 面向大模型推理调度路径，设计并实现了前缀缓存感知的 Cache-Aware Prefill Scheduler，用于缓解 FIFO 调度下的队头阻塞问题，并通过 scheduler microbenchmark 对比不同 workload 下的缓存复用和请求时延差异。
-
-英文描述：
-
-> A lightweight LLM inference scheduling optimization project for prefix-cache-aware prefill admission. It implements a cache-aware prefill scheduler to reduce head-of-line blocking and improve request admission under KV-cache pressure.
-
-## 局限性与后续工作
-
-- 当前 benchmark 是 scheduler-only microbenchmark，不直接等价于真实 GPU 推理吞吐。
-- 当前策略是启发式调度，而不是生产级公平调度器。
-- Prefix Cache 仍然是 block 级复用，无法复用非 block 对齐的部分前缀。
-
-后续可以继续扩展：
-
-- 增加 aging / fairness 机制
-- 做 shared-prefix grouping
-- 接入真实模型 TTFT / TPOT 统计
-- 与 radix-tree prefix cache 结合
-
 ## 致谢
 
 本仓库延续了轻量级大模型推理实现的代码风格，并在此基础上扩展出一个面向缓存感知 prefill 调度的优化实验项目。
